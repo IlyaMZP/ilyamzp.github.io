@@ -25,7 +25,6 @@
       const reader = new FileReader();
 
       reader.onload = function () {
-        // FileReader returns a data URL; pass only the Base64 portion.
         const encMessageBase64 = String(reader.result).split(",")[1];
 
         run(encMessageBase64);
