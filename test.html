@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CPEnvelopedData.Decrypt</title>
+  <script language="javascript" src="https://cryptopro.ru/sites/default/files/products/cades/cadesplugin_api.js?v=319244"></script>
+</head>
+<body>
+  <input type="file" id="fileInput">
+  <button type="button" id="decryptButton">Decrypt</button>
+  <pre id="output"></pre>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const output = document.getElementById("output");
+
+    document.getElementById("decryptButton").addEventListener("click", function () {
+      const file = fileInput.files[0];
+
+      if (!file) {
+        output.textContent = "Select a file first.";
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function () {
+        // FileReader returns a data URL; pass only the Base64 portion.
+        const encMessageBase64 = String(reader.result).split(",")[1];
+
+        run(encMessageBase64);
+      };
+
+      reader.onerror = function () {
+        output.textContent = "Could not read the selected file.";
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    function run(encMessageBase64) {
+      cadesplugin.then(
+        function () {
+          cadesplugin.async_spawn(function* () {
+            try {
+              const oEnvelopedData =
+                yield cadesplugin.CreateObjectAsync("CAdESCOM.CPEnvelopedData");
+
+              yield oEnvelopedData.propset_ContentEncoding(cadesplugin.CADESCOM_BASE64_TO_BINARY)
+              yield oEnvelopedData.Decrypt(encMessageBase64);
+
+              const content = yield oEnvelopedData.Content;
+              output.textContent = content;
+            } catch (error) {
+              output.textContent = "Decryption failed: " + error;
+            }
+          });
+        },
+        function (error) {
+          output.textContent = "CAdES plugin initialization failed: " + error;
+        }
+      );
+    }
+  </script>
+</body>
+</html>
